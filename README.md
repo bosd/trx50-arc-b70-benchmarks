@@ -118,10 +118,17 @@ following runtime flags matter for stability — credit to
 
 ## vLLM-XPU note
 
-vLLM-XPU (the `intel/vllm` container) currently fails `torch.xpu` init on the B70 (`UR_RESULT_ERROR_UNKNOWN`)
-even though `sycl-ls` enumerates both cards — a torch-xpu/Battlemage container bug (needs `--enforce-eager`
-and likely a pinned image tag). Per PMZFX and Hal9000, **llama.cpp-SYCL beats vLLM ~4.3× at single-stream**;
-vLLM only wins at TP=N sharding for high-concurrency multi-user serving. For single-stream latency,
-llama.cpp-SYCL (this repo) is the backend to use.
+**vLLM-XPU is blocked on this box (Fedora 44, kernel 7.0.10) — parked.** `torch.xpu` device-init fails with
+`UR_RESULT_ERROR_UNKNOWN` **consistently** across the `intel/vllm` *and*
+[`kyuz0/intel-b70-vllm-toolbox`](https://github.com/kyuz0/intel-b70-ai-toolboxes) containers — every fix tried
+(rootless/privileged, `ZES_ENABLE_SYSMAN`, FLAT/COMPOSITE hierarchy, `ONEAPI_DEVICE_SELECTOR=*:gpu` +
+`TRITON_INTEL_DEVICE_ARCH=20.2.0` per [crazydart](https://github.com/crazydart/vllm-b70)). Bare-metal
+(crazydart wheels) fails differently: Fedora 44 ships no Level Zero *loader*, so L0 enumerates nothing.
+Notably `sycl-ls` sees both cards via Level Zero in-container, and **OpenCL + our SYCL-over-OpenCL llama.cpp
+work fine** — so it's torch-xpu's specific UR/L0 path. The only common factor is the host **xe driver / kernel
+7.0.10**; the working recipes all target **7.0.0**, pointing to a xe regression. **Revisit on a kernel/xe
+update** (the firmware-watch catches those). Narrow value anyway: vLLM decode on B70 is ~5 t/s — it only wins
+**high-concurrency prefill**. For single-stream, **llama.cpp-SYCL** (this repo) is the backend; it beats vLLM
+~4.3× there per PMZFX/Hal9000. When torch-xpu is fixed, **kyuz0's toolbox is the fastest path back in**.
 </content>
 </invoke>
