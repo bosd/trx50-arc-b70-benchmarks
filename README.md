@@ -47,12 +47,28 @@ so results are directly comparable.
 | DeepSeek-R1-Distill-Llama-70B | dense | Q4_K_M | ~42 GB | dual-GPU |
 | Llama-3.3-70B-Instruct | dense | Q4_K_M | ~42 GB | dual-GPU |
 
-## Results
+## Results — firmware: BIOS 14.10 · GuC 70.65.0 · kernel 7.0.10 · Mesa 26.0.7
 
-| Model | Type | Quant | Size (GiB) | GPUs | pp512 t/s | tg128 t/s | avg W | t/J |
-|---|---|---|---|---|---|---|---|---|
-| _pending first run_ | | | | | | | | |
+`llama-bench -p 512 -n 128`; wall power via Shelly Plug S G3; `t/J = tg128 ÷ avg W`.
 
-_Status: hardware up, toolchain building, models downloading. Results land here after the first run._
+| Model | Backend | Type | Quant | Size (GiB) | GPUs | pp512 t/s | tg128 t/s | avg W | t/J |
+|---|---|---|---|---|---|---|---|---|---|
+| Qwen3.6-35B-A3B | vulkan | MoE 3B-act | UD-Q4_K_M | 20.6 | 1 | **1314.7** | 39.7 | 319 | 0.124 |
+| Qwen3.6-35B-A3B | vulkan | MoE 3B-act | UD-Q4_K_M | 20.6 | 2 | 1290.8 | 27.9 | 316 | 0.088 |
+| Qwen3.6-35B-A3B | sycl   | MoE 3B-act | UD-Q4_K_M | 20.6 | 1 | 973.5 | **69.9** | 307 | **0.228** |
+| Qwen3.6-35B-A3B | sycl   | MoE 3B-act | UD-Q4_K_M | 20.6 | 2 | 934.3 | 68.7 | 324 | 0.212 |
+| DeepSeek-R1-Distill-70B | vulkan | dense 70B | Q4_K_M | 39.6 | 2 | 229.0 | 5.0 | 327 | 0.015 |
+| DeepSeek-R1-Distill-70B | sycl   | dense 70B | Q4_K_M | 39.6 | 2 | 345.9 | **11.7** | 361 | 0.032 |
+| Llama-3.3-70B-Instruct | vulkan | dense 70B | Q4_K_M | 39.6 | 2 | 230.2 | 5.0 | 327 | 0.015 |
+| Llama-3.3-70B-Instruct | sycl   | dense 70B | Q4_K_M | 39.6 | 2 | 345.3 | **11.7** | 376 | 0.031 |
+
+### Key findings
+
+- **SYCL wins token generation decisively** — **1.8×** (Qwen MoE) to **2.3×** (dense 70B) over Vulkan, at similar/lower power → **~2× tokens-per-joule**. For the production 70B workload: **SYCL 11.7 vs Vulkan 5.0 tg/s**.
+- **Prompt processing splits by architecture:** SYCL wins on the **dense 70B** (345 vs 229), Vulkan wins on the **MoE** (1314 vs 973 — its `KHR_coopmat` path is strong on the sparse prompt).
+- **Multi-GPU only helps when the model doesn't fit on one card.** Splitting the 20 GB Qwen across two B70s *hurt* tg (Vulkan 39.7→27.9) — `-sm layer` serialises the GPUs. Run fits-on-one models on a **single** card; reserve dual-GPU for the 70Bs.
+- **Verdict: SYCL is the production backend** here. Single B70 for ≤~28 GB models; dual-B70 SYCL for 70B (~11–12 tg/s — usable for drafting/helpdesk).
+- Device handling that actually engages the split: Vulkan needs `GGML_VK_VISIBLE_DEVICES=1,2 -sm layer` (the `-dev` flag does **not** split); SYCL splits with plain `-sm layer`.
+- *IPEX-LLM excluded — Intel archived it Jan 2026; llama.cpp-SYCL is the supported XMX path.*
 </content>
 </invoke>
