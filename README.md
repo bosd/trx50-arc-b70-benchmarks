@@ -103,5 +103,25 @@ Closest comparable — 35B-A3B MoE, Q4_K_M, SYCL, 1 GPU:
 | [PMZFX](https://github.com/PMZFX/intel-arc-pro-b70-benchmarks) (Qwen3.5) | 54.5 | 92 | 0.59 |
 
 **~28% faster generation and ~46% more efficient** on a like-for-like (GPU-only power) basis. *(Caveat: newer model version + compiler 2026.0 vs 2025.3 + newer llama.cpp commit — not a fully controlled comparison; different CPU/board/BIOS too.)*
+
+## Production serving notes (Battlemage SYCL)
+
+These benchmarks use `llama-bench`; for a long-lived **server** (Ollama / `llama-server`) on the B70 the
+following runtime flags matter for stability — credit to
+[Hal9000AIML/arc-pro-b70-ubuntu-gpu-speedup-bugfixes](https://github.com/Hal9000AIML/arc-pro-b70-ubuntu-gpu-speedup-bugfixes):
+
+- **`GGML_SYCL_DISABLE_OPT=1`** — *required* for MoE on SYCL or slot-init hangs at startup (~5% cost on dense).
+- **`-fa 0`** on SYCL + MoE — SYCL flash-attention crashes on MoE (Vulkan FA is fine).
+- **`UR_L0_ENABLE_RELAXED_ALLOCATION_LIMITS=1`** — Level Zero caps allocations at 4 GB; needed for large-context KV.
+- **Never set `SYCL_CACHE_PERSISTENT=1`** — kernel-cache corrupts on B70 (SEGV at next boot).
+- Build with **`-DGGML_SYCL_HOST_MEM_FALLBACK=ON`** for graceful VRAM-exhaustion fallback.
+
+## vLLM-XPU note
+
+vLLM-XPU (the `intel/vllm` container) currently fails `torch.xpu` init on the B70 (`UR_RESULT_ERROR_UNKNOWN`)
+even though `sycl-ls` enumerates both cards — a torch-xpu/Battlemage container bug (needs `--enforce-eager`
+and likely a pinned image tag). Per PMZFX and Hal9000, **llama.cpp-SYCL beats vLLM ~4.3× at single-stream**;
+vLLM only wins at TP=N sharding for high-concurrency multi-user serving. For single-stream latency,
+llama.cpp-SYCL (this repo) is the backend to use.
 </content>
 </invoke>
