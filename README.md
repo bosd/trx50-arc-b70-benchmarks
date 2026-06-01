@@ -104,6 +104,39 @@ Closest comparable — 35B-A3B MoE, Q4_K_M, SYCL, 1 GPU:
 
 **~28% faster generation and ~46% more efficient** on a like-for-like (GPU-only power) basis. *(Caveat: newer model version + compiler 2026.0 vs 2025.3 + newer llama.cpp commit — not a fully controlled comparison; different CPU/board/BIOS too.)*
 
+## Precision & 1-bit study
+
+Filling the ladder (INT5 / BF16) plus a for-fun 1-bit run. All single-B70, SYCL unless noted.
+
+**Q5_K_M slots into the 35B-A3B ladder — a sweet spot** (nearly Q4_K_M speed at higher quality):
+
+| Quant | Size (GiB) | tg128 | t/J(GPU) |
+|---|---|---|---|
+| Q4_K_M | 20.6 | 69.9 | 0.863 |
+| **Q5_K_M** | 24.1 | **68.3** | 0.742 |
+| Q6_K | 27.3 | 51.3 | 0.618 |
+| Q8_0 (2-GPU) | 34.4 | 46.2 | 0.578 |
+
+→ Q5_K_M costs **~2 %** tg over Q4_K_M for a precision bump — far closer to Q4 than to Q6.
+
+**BF16 vs Q4_K_M (Qwen3-4B) — the precision ceiling:**
+
+| Backend | Quant | pp512 | tg128 | GPU W | t/J(GPU) |
+|---|---|---|---|---|---|
+| sycl | BF16 | 1433 | 52.5 | 128 | 0.410 |
+| sycl | Q4_K_M | 3280 | **115.7** | 144 | 0.803 |
+
+→ **Q4 is 2.2× faster and ~2× more efficient than BF16** — decode is bandwidth-bound and BF16 is 4× the bytes; BF16 buys you lossless quality at ~half the speed. *(Vulkan edges SYCL on BF16 decode (58.8 vs 52.5), but SYCL crushes the quantized path (115.7 vs 79.9) — its MMVQ/reorder win.)*
+
+**A 70B at ~1.7-bit on a SINGLE B70** — Llama-3.3-70B `UD-IQ1_M` (16 GiB):
+
+| Config | GPUs | tg128 |
+|---|---|---|
+| Llama-3.3-70B Q4_K_M | 2 | 11.7 |
+| **Llama-3.3-70B IQ1_M** | **1** | **11.0** |
+
+→ The 1-bit quant fits a **70B on one card** and runs at ~the speed of Q4 on **two** cards — frees a whole GPU, at a real quality cost. *(FP8 — the other sub-Q4 path — needs vLLM-XPU, which is parked; see below.)*
+
 ## Production serving notes (Battlemage SYCL)
 
 These benchmarks use `llama-bench`; for a long-lived **server** (Ollama / `llama-server`) on the B70 the
