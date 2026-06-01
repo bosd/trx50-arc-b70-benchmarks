@@ -70,5 +70,38 @@ so results are directly comparable.
 - **Verdict: SYCL is the production backend** here. Single B70 for ≤~28 GB models; dual-B70 SYCL for 70B (~11–12 tg/s — usable for drafting/helpdesk).
 - Device handling that actually engages the split: Vulkan needs `GGML_VK_VISIBLE_DEVICES=1,2 -sm layer` (the `-dev` flag does **not** split); SYCL splits with plain `-sm layer`.
 - *IPEX-LLM excluded — Intel archived it Jan 2026; llama.cpp-SYCL is the supported XMX path.*
+
+## Quant sweep — Qwen3.6-35B-A3B (same firmware)
+
+Which quant is fastest/most efficient on the B70? Single B70 where it fits; **Q8_0 needs two cards** (35 GB > one card's ~31 GB usable). Q4_0 from bartowski, the rest from Unsloth. Includes GPU-only power (xe hwmon) for direct comparison with GPU-power benchmarks.
+
+| Backend | Quant | Size (GiB) | GPUs | pp512 | tg128 | wall W | GPU W | t/J(wall) | t/J(GPU) |
+|---|---|---|---|---|---|---|---|---|---|
+| sycl | **UD-Q4_K_M** | 20.6 | 1 | 972 | **69.9** | 293 | 81 | 0.239 | **0.863** |
+| sycl | Q4_0 | 19.4 | 1 | 872 | 62.6 | 324 | 100 | 0.193 | 0.626 |
+| sycl | UD-Q6_K | 27.3 | 1 | 706 | 51.3 | 305 | 83 | 0.168 | 0.618 |
+| sycl | Q8_0 | 34.4 | 2 | 627 | 46.2 | 289 | 80 | 0.160 | 0.578 |
+| vulkan | Q4_0 | 19.4 | 1 | **1377** | 50.9 | 319 | 108 | 0.160 | 0.471 |
+| vulkan | UD-Q4_K_M | 20.6 | 1 | 1310 | 39.7 | 318 | 105 | 0.125 | 0.378 |
+| vulkan | UD-Q6_K | 27.3 | 1 | 1093 | 34.2 | 321 | 103 | 0.107 | 0.332 |
+| vulkan | Q8_0 | 34.4 | 2 | 1132 | 13.9 | 277 | 71 | 0.050 | 0.196 |
+
+### Quant findings
+
+- **Best overall: UD-Q4_K_M on SYCL** — fastest generation (69.9 tg/s), most efficient (0.863 t/J GPU), fits one card. The production pick.
+- **Best quant differs by backend:** on **SYCL** Q4_K_M > Q4_0 for tg; on **Vulkan** Q4_0 > Q4_K_M (and Q4_0 gives Vulkan's top pp, 1377). Choose per backend.
+- **Higher precision costs speed:** Q6_K / Q8_0 trade ~25–35% tg for quality. Q8_0 (2-GPU SYCL) still does 46 tg/s — viable when quality matters.
+- **SYCL dominates multi-GPU:** Q8_0 across two cards — SYCL **46.2** vs Vulkan **13.9** tg/s (3.3×); Vulkan's layer-split serialisation hurts badly (matches the 70B result).
+
+### vs PMZFX — fair, same metric (GPU-only power)
+
+Closest comparable — 35B-A3B MoE, Q4_K_M, SYCL, 1 GPU:
+
+| | tg128 t/s | GPU W | t/J(GPU) |
+|---|---|---|---|
+| **This box (Qwen3.6)** | **69.9** | 81 | **0.863** |
+| [PMZFX](https://github.com/PMZFX/intel-arc-pro-b70-benchmarks) (Qwen3.5) | 54.5 | 92 | 0.59 |
+
+**~28% faster generation and ~46% more efficient** on a like-for-like (GPU-only power) basis. *(Caveat: newer model version + compiler 2026.0 vs 2025.3 + newer llama.cpp commit — not a fully controlled comparison; different CPU/board/BIOS too.)*
 </content>
 </invoke>
