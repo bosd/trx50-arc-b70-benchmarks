@@ -1,0 +1,5 @@
+SYCL GPU device 0 does not use Level Zero backend, disabling Level Zero memory API
+SYCL GPU device 1 does not use Level Zero backend, disabling Level Zero memory API
+get_memory_info: [warning] ext_intel_free_memory is not supported (export/set ZES_ENABLE_SYSMAN=1 to support), use total memory as free memory
+get_memory_info: [warning] ext_intel_free_memory is not supported (export/set ZES_ENABLE_SYSMAN=1 to support), use total memory as free memory
+get_memory_info: [warning] ext_intel_free_memory is not supported (export/set ZES_ENABLE_SYSMAN=1 to support), use total memory as free memory
