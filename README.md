@@ -60,7 +60,7 @@ The true **12B-active** rung (GLM-4.5-Air, Nemotron-Super-120B-A12B) needs the *
 
 | | |
 |---|---|
-| GPUs | **Arc Pro B70** (G31, `8086:e223`, 32 GB) + **Arc Pro B60** (G21, `8086:e211`, 24 GB) — *2nd B70 planned; the B60 study uses the B60 alone* |
+| GPUs | 2× **Arc Pro B70** (G31, `8086:e223`, 32 GB) installed + **Arc Pro B60** (G21, `8086:e211`, 24 GB) in for testing — *one B70 currently disabled to power the B60, so the live config is 1× B70 + 1× B60* |
 | Board | ASRock **TRX50 WS** (PCIE3 = Gen5 x16, PCIE5 = Gen4 x8) |
 | CPU | AMD Ryzen Threadripper **9960X** (24c / 48t) |
 | RAM | 64 GB DDR5-4800 ECC RDIMM *(currently 1× 32 GB — second stick RMA in progress)* |

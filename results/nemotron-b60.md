@@ -55,9 +55,10 @@ Qwen3.6-35B-A3B as the "biggest brain that fits one efficient card."
 
 ## 3. Llama-3.3-Nemotron-Super-49B — the big one (no B70 pair yet)
 
-NAS-pruned from Llama-3.3-70B → 49B dense, Q4_K_M 28 GiB. **There is no B70 pair on the box yet**
-(the 2nd B70 is the planned purchase), so this ran across the only 2-card config available —
-a **mixed B60 + B70 tensor-split** (`-sm layer`), power summed over both cards.
+NAS-pruned from Llama-3.3-70B → 49B dense, Q4_K_M 28 GiB. The box has **2× B70 installed, but one
+B70 is currently disabled to power the B60** under test — so this ran on the live 2-card config:
+a **mixed (active B70) + B60 tensor-split** (`-sm layer`), power summed over both cards. (A true
+uniform B70 pair is available by pulling the B60 and re-enabling the second B70.)
 
 | Backend | pp512 t/s | tg t/s | active W (both) | t/J |
 |---|---|---|---|---|
