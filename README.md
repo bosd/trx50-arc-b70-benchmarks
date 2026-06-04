@@ -1,15 +1,66 @@
-# Intel Arc Pro B70 (Battlemage G31) — LLM Inference Benchmarks
+# Intel Arc Pro B70 + B60 (Battlemage) — LLM Inference Benchmarks
 
-Dual **Intel Arc Pro B70** (Xe2 / Battlemage **G31**, 32 GB GDDR6 each) LLM inference numbers on a
-Threadripper workstation, with **wall-power efficiency (tokens/joule)** measured at the plug.
-Methodology mirrors [`PMZFX/intel-arc-pro-b70-benchmarks`](https://github.com/PMZFX/intel-arc-pro-b70-benchmarks)
-so results are directly comparable.
+LLM inference numbers for **Intel Arc Pro B70** (Battlemage **G31**, 32 GB) and **B60** (G21, 24 GB)
+on a Threadripper workstation, with **tokens-per-joule** efficiency. The original dual-B70 study
+(wall power, 70B-class) is below; the newer **single-card B60 model survey** — Gemma 4, MiMo,
+Nemotron, Phi-4, Granite-4, Qwen3-Coder, QwQ and more — is summarised in the leaderboard.
+Dual-B70 methodology mirrors [`PMZFX/intel-arc-pro-b70-benchmarks`](https://github.com/PMZFX/intel-arc-pro-b70-benchmarks).
+
+## 🏆 B60 single-card leaderboard
+
+Which model to put on the **B60** (24 GB, the efficient/console card)? Best generation backend per
+model, ranked by tg/s. **Power = GPU-only (xe energy counter), active generation** — comparable to
+the `t/J(GPU)` columns below, **not** the wall-power table. Q4_0 for the MoEs, Q4_K_M for dense.
+
+| # | Model | type | size GiB | tg t/s (backend) | active W | t/J | license | best for |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Qwen3-4B | 4B dense | 2.5 | **101.8** (SYCL) | 81 | 1.26 | Apache-2.0 | tiny & fast |
+| 2 | **Qwen3-Coder-30B-A3B** | MoE 3B-act | 16.2 | **65.2** (Vulkan) | 60 | 1.09 | Apache-2.0 | 🥇 coding (fastest big) |
+| 3 | MiMo-7B-RL | 7B dense | 4.4 | 64.3 (SYCL) | 86 | 0.75 | **MIT** | reasoning / watt |
+| 4 | **Nemotron-3-Nano-30B-A3B** | hybrid MoE 3B-act | 17.0 | 55.5 (Vulkan) | 65 | 0.85 | NVIDIA-OM | 🥇 general big-brain |
+| 5 | Nemotron-Nano-12B-v2 | hybrid 12B | 7.0 | 42.8 (SYCL) | 88 | 0.49 | NVIDIA-OM | fast hybrid |
+| 6 | Phi-4-reasoning-plus | 14B dense | 8.4 | 39.2 (SYCL) | 92 | 0.43 | **MIT** | reasoning (MIT) |
+| 7 | Qwen3.6-35B-A3B | MoE 3B-act | 20.0 | 37.3 (Vulkan) | 60 | 0.62 | Apache-2.0 | general MoE |
+| 8 | Gemma 4 12B | 12B dense | 6.9 | 36.4 (SYCL) | 85 | 0.43 | Gemma | dense daily-driver |
+| 9 | Granite-4.0-H-Small | hybrid MoE 9B-act | 17.2 | 34.3 (Vulkan) | 74 | 0.46 | Apache-2.0 | 9B-active rung |
+| 10 | QwQ-32B | 32B dense | 18.5 | 17.3 (SYCL) | 92 | 0.19 | Apache-2.0 | dense reasoner (wants B70) |
+
+**Picks:** general → **Nemotron-3-Nano-30B-A3B** · coding → **Qwen3-Coder-30B-A3B** (also the fastest
+big model the card holds) · MIT reasoning → **Phi-4-reasoning-plus** / **MiMo-7B-RL**.
+
+### Backend rule (B60): **dense → SYCL, 30B-class MoE → Vulkan**
+Every dense model (incl. the 7B/12B/14B and the 12B hybrid) generates fastest on the **SYCL** build;
+every 30B-class **MoE** generates fastest on **Vulkan**. The discriminator is MoE-vs-dense, *not*
+Mamba — Qwen3-Coder is a pure MoE (no SSM) and still flips to Vulkan. *(This is **B60-specific**: on
+the **B70**, SYCL wins across the board — see the main table — so the MoE→Vulkan flip is the smaller
+G21's behaviour. SYCL-MoE flags were left at llama-bench defaults.)*
+
+### Past the VRAM wall (don't fit 2 cards)
+Giant MoEs benchmarked-by-spec only — need a big-RAM serving node, not more B70s:
+**MiMo-V2.5** (~310B, 87–187 GB), **MiniMax / GLM-4.6 / DeepSeek-V3 / Kimi-K2** (456B–1T).
+The true **12B-active** rung (GLM-4.5-Air, Nemotron-Super-120B-A12B) needs the **3rd B70 (96 GB)**.
+
+## Study index
+
+| Study | What | File |
+|---|---|---|
+| B60 vs B70 | single-card head-to-head (gen speed, power, POST) | [`results/b60-vs-b70.md`](results/b60-vs-b70.md) |
+| Gemma 4 12B | new `gemma4` arch on the B60 | [`results/gemma4-12b-b60.md`](results/gemma4-12b-b60.md) |
+| MiMo | 7B-RL fits; V2.5 (310B) past the wall | [`results/mimo-b60.md`](results/mimo-b60.md) |
+| Nemotron ×3 | 30B-A3B = B60 champ; 12B hybrid; 49B on 2 cards | [`results/nemotron-b60.md`](results/nemotron-b60.md) |
+| Permissive round | Phi-4 (MIT), Granite-4, Qwen3-Coder, QwQ-32B | [`results/permissive-models-b60.md`](results/permissive-models-b60.md) |
+| MoE ladder | speed vs active params (3B → 12B-active) | [`results/moe-ladder-results.md`](results/moe-ladder-results.md) |
+| Kimi-Linear | KDA linear attention — flat long-context speed | [`results/kimi-linear-results.md`](results/kimi-linear-results.md) |
+| Step-3.7 Flash | big MoE, RAM-bound — needs 96 GB | [`results/step37-flash-findings.md`](results/step37-flash-findings.md) |
+| Arch gauntlet | mamba / rwkv / jamba (jamba broken) | [`results/arch-gauntlet-results.md`](results/arch-gauntlet-results.md) |
+| Quality-per-joule | efficiency sweep | [`results/quality-per-joule-results.md`](results/quality-per-joule-results.md) |
+| Context tax · Embeddings · Spec-decode | misc | [`results/`](results/) |
 
 ## Hardware
 
 | | |
 |---|---|
-| GPUs | 2× Intel **Arc Pro B70** (G31, `8086:e223`), 32 GB each, 256-bit, 608 GB/s, 230 W cap |
+| GPUs | **Arc Pro B70** (G31, `8086:e223`, 32 GB) + **Arc Pro B60** (G21, `8086:e211`, 24 GB) — *2nd B70 planned; the B60 study uses the B60 alone* |
 | Board | ASRock **TRX50 WS** (PCIE3 = Gen5 x16, PCIE5 = Gen4 x8) |
 | CPU | AMD Ryzen Threadripper **9960X** (24c / 48t) |
 | RAM | 64 GB DDR5-4800 ECC RDIMM *(currently 1× 32 GB — second stick RMA in progress)* |
