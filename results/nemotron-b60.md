@@ -24,8 +24,11 @@ Direct rival to the previous champ Qwen3.6-35B-A3B (same Q4_0, same 3B-active Mo
 
 **It beats Qwen3.6-35B-A3B (37 t/s Vulkan) by ~1.5×, at smaller size and similar/lower power.**
 - **Backend reversal:** Vulkan ≥ SYCL here — the opposite of every *dense* model on these cards.
-  The Mamba/SSM layers run better on the Vulkan backend than on SYCL/OpenCL, so for the hybrid
-  Nemotrons **Vulkan is the path**, not SYCL. (Genuinely new finding for this box.)
+  Run the hybrid 30B-A3B on the **Vulkan** build, not SYCL.
+  > **Correction (see `permissive-models-b60.md`):** I first attributed this to the Mamba/SSM
+  > layers. That's wrong — Qwen3-Coder-30B-A3B is a *pure* MoE (no SSM) and *also* flips to Vulkan,
+  > while the Nemotron-12B hybrid stays on SYCL. The real rule is **MoE → Vulkan, dense → SYCL**,
+  > not SSM. The 30B-A3B benefits because it's a big MoE, not because it's hybrid.
 - **SYCL t/J = 1.03 at 50 W** is the best efficiency of any "big-brain" model measured on the B60.
 - Coherence ✓ — the bat-and-ball trap: it set up `x + (x+1) = 1.10` → ball = **$0.05**, dodging
   the intuitive-wrong $0.10. Clean reasoning, no garbage from the hybrid arch.
@@ -84,5 +87,6 @@ tokens — note the 45 W floor). The **SYCL 13.4 t/s is the representative numbe
 
 **Bottom line:** NVIDIA's hybrid Mamba-MoE **Nemotron-3-Nano-30B-A3B is the new best B60 resident**
 — more capable *and* faster than the Qwen it replaces, and the most efficient big model on the card.
-Two backend lessons fall out: for **hybrid-SSM** models, **Vulkan wins** (reverse of dense); and a
-49B still wants a real B70 pair, not a B60-mixed split.
+Two backend lessons fall out: **large MoE models prefer Vulkan** (reverse of dense — see the
+corrected rule in `permissive-models-b60.md`); and a 49B still wants a real B70 pair, not a
+B60-mixed split.
