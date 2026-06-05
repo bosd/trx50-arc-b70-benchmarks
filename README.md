@@ -51,6 +51,7 @@ The true **12B-active** rung (GLM-4.5-Air, Nemotron-Super-120B-A12B) needs the *
 | Nemotron ×3 | 30B-A3B = B60 champ; 12B hybrid; 49B on 2 cards | [`results/nemotron-b60.md`](results/nemotron-b60.md) |
 | Permissive round | Phi-4 (MIT), Granite-4, Qwen3-Coder, QwQ-32B | [`results/permissive-models-b60.md`](results/permissive-models-b60.md) |
 | LFM2.5-8B-A1B | 1B-active MoE — fastest & most efficient on the B60 | [`results/lfm2.5-b60.md`](results/lfm2.5-b60.md) |
+| Speech / ASR | Nemotron streaming ASR — RTF 0.083 (12× realtime, CPU) | [`results/asr-nemotron-speech.md`](results/asr-nemotron-speech.md) |
 | MoE ladder | speed vs active params (3B → 12B-active) | [`results/moe-ladder-results.md`](results/moe-ladder-results.md) |
 | Kimi-Linear | KDA linear attention — flat long-context speed | [`results/kimi-linear-results.md`](results/kimi-linear-results.md) |
 | Step-3.7 Flash | big MoE, RAM-bound — needs 96 GB | [`results/step37-flash-findings.md`](results/step37-flash-findings.md) |
