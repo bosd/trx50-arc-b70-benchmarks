@@ -19,12 +19,14 @@ the `t/J(GPU)` columns below, **not** the wall-power table. Q4_0 for the MoEs, Q
 | 3 | **Qwen3-Coder-30B-A3B** | MoE 3B-act | 16.2 | 65.2 (Vulkan) | 60 | 1.09 | Apache-2.0 | 🥇 coding (fastest big) |
 | 4 | MiMo-7B-RL | 7B dense | 4.4 | 64.3 (SYCL) | 86 | 0.75 | **MIT** | reasoning / watt |
 | 5 | **Nemotron-3-Nano-30B-A3B** | hybrid MoE 3B-act | 17.0 | 55.5 (Vulkan) | 65 | 0.85 | NVIDIA-OM | 🥇 general big-brain |
-| 6 | Nemotron-Nano-12B-v2 | hybrid 12B | 7.0 | 42.8 (SYCL) | 88 | 0.49 | NVIDIA-OM | fast hybrid |
-| 7 | Phi-4-reasoning-plus | 14B dense | 8.4 | 39.2 (SYCL) | 92 | 0.43 | **MIT** | reasoning (MIT) |
-| 8 | Qwen3.6-35B-A3B | MoE 3B-act | 20.0 | 37.3 (Vulkan) | 60 | 0.62 | Apache-2.0 | general MoE |
-| 9 | Gemma 4 12B | 12B dense | 6.9 | 36.4 (SYCL) | 85 | 0.43 | Gemma | dense daily-driver |
-| 10 | Granite-4.0-H-Small | hybrid MoE 9B-act | 17.2 | 34.3 (Vulkan) | 74 | 0.46 | Apache-2.0 | 9B-active rung |
-| 11 | QwQ-32B | 32B dense | 18.5 | 17.3 (SYCL) | 92 | 0.19 | Apache-2.0 | dense reasoner (wants B70) |
+| 6 | Mistral-Nemo-12B | 12B dense | 7.0 | 45.0 (SYCL) | 89 | 0.51 | Apache-2.0 | 🥇 Dutch / multilingual |
+| 7 | Nemotron-Nano-12B-v2 | hybrid 12B | 7.0 | 42.8 (SYCL) | 88 | 0.49 | NVIDIA-OM | fast hybrid |
+| 8 | Phi-4-reasoning-plus | 14B dense | 8.4 | 39.2 (SYCL) | 92 | 0.43 | **MIT** | reasoning (MIT) |
+| 9 | Hermes-4-14B | 14B dense (qwen3) | 8.4 | 37.5 (SYCL) | 90 | 0.42 | Apache-2.0 | 🥇 agentic / tool-use |
+| 10 | Qwen3.6-35B-A3B | MoE 3B-act | 20.0 | 37.3 (Vulkan) | 60 | 0.62 | Apache-2.0 | general MoE |
+| 11 | Gemma 4 12B | 12B dense | 6.9 | 36.4 (SYCL) | 85 | 0.43 | Gemma | dense daily-driver |
+| 12 | Granite-4.0-H-Small | hybrid MoE 9B-act | 17.2 | 34.3 (Vulkan) | 74 | 0.46 | Apache-2.0 | 9B-active rung |
+| 13 | QwQ-32B | 32B dense | 18.5 | 17.3 (SYCL) | 92 | 0.19 | Apache-2.0 | dense reasoner (wants B70) |
 
 **Picks:** fastest/most-efficient → **LFM2.5-8B-A1B** · general → **Nemotron-3-Nano-30B-A3B** ·
 coding → **Qwen3-Coder-30B-A3B** · MIT reasoning → **Phi-4-reasoning-plus** / **MiMo-7B-RL**.
@@ -51,6 +53,7 @@ The true **12B-active** rung (GLM-4.5-Air, Nemotron-Super-120B-A12B) needs the *
 | Nemotron ×3 | 30B-A3B = B60 champ; 12B hybrid; 49B on 2 cards | [`results/nemotron-b60.md`](results/nemotron-b60.md) |
 | Permissive round | Phi-4 (MIT), Granite-4, Qwen3-Coder, QwQ-32B | [`results/permissive-models-b60.md`](results/permissive-models-b60.md) |
 | LFM2.5-8B-A1B | 1B-active MoE — fastest & most efficient on the B60 | [`results/lfm2.5-b60.md`](results/lfm2.5-b60.md) |
+| Multilingual / agentic | Mistral-Nemo (Dutch ✓) & Hermes-4-14B (tool-calling ✓) | [`results/multilingual-agentic-b60.md`](results/multilingual-agentic-b60.md) |
 | Speech / ASR | Nemotron-3.5 streaming ASR — offline 5.7× RT + streaming-chunk latency (CPU) | [`results/asr-nemotron-speech.md`](results/asr-nemotron-speech.md) |
 | MoE ladder | speed vs active params (3B → 12B-active) | [`results/moe-ladder-results.md`](results/moe-ladder-results.md) |
 | Kimi-Linear | KDA linear attention — flat long-context speed | [`results/kimi-linear-results.md`](results/kimi-linear-results.md) |
