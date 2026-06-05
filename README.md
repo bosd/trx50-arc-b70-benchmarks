@@ -14,26 +14,27 @@ the `t/J(GPU)` columns below, **not** the wall-power table. Q4_0 for the MoEs, Q
 
 | # | Model | type | size GiB | tg t/s (backend) | active W | t/J | license | best for |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Qwen3-4B | 4B dense | 2.5 | **101.8** (SYCL) | 81 | 1.26 | Apache-2.0 | tiny & fast |
-| 2 | **Qwen3-Coder-30B-A3B** | MoE 3B-act | 16.2 | **65.2** (Vulkan) | 60 | 1.09 | Apache-2.0 | 🥇 coding (fastest big) |
-| 3 | MiMo-7B-RL | 7B dense | 4.4 | 64.3 (SYCL) | 86 | 0.75 | **MIT** | reasoning / watt |
-| 4 | **Nemotron-3-Nano-30B-A3B** | hybrid MoE 3B-act | 17.0 | 55.5 (Vulkan) | 65 | 0.85 | NVIDIA-OM | 🥇 general big-brain |
-| 5 | Nemotron-Nano-12B-v2 | hybrid 12B | 7.0 | 42.8 (SYCL) | 88 | 0.49 | NVIDIA-OM | fast hybrid |
-| 6 | Phi-4-reasoning-plus | 14B dense | 8.4 | 39.2 (SYCL) | 92 | 0.43 | **MIT** | reasoning (MIT) |
-| 7 | Qwen3.6-35B-A3B | MoE 3B-act | 20.0 | 37.3 (Vulkan) | 60 | 0.62 | Apache-2.0 | general MoE |
-| 8 | Gemma 4 12B | 12B dense | 6.9 | 36.4 (SYCL) | 85 | 0.43 | Gemma | dense daily-driver |
-| 9 | Granite-4.0-H-Small | hybrid MoE 9B-act | 17.2 | 34.3 (Vulkan) | 74 | 0.46 | Apache-2.0 | 9B-active rung |
-| 10 | QwQ-32B | 32B dense | 18.5 | 17.3 (SYCL) | 92 | 0.19 | Apache-2.0 | dense reasoner (wants B70) |
+| 1 | **LFM2.5-8B-A1B** | MoE 1B-act | 5.3 | **150.9** (SYCL) | 51 | **2.96** | other (Liquid) | 🥇 fastest & most efficient |
+| 2 | Qwen3-4B | 4B dense | 2.5 | 101.8 (SYCL) | 81 | 1.26 | Apache-2.0 | tiny & fast |
+| 3 | **Qwen3-Coder-30B-A3B** | MoE 3B-act | 16.2 | 65.2 (Vulkan) | 60 | 1.09 | Apache-2.0 | 🥇 coding (fastest big) |
+| 4 | MiMo-7B-RL | 7B dense | 4.4 | 64.3 (SYCL) | 86 | 0.75 | **MIT** | reasoning / watt |
+| 5 | **Nemotron-3-Nano-30B-A3B** | hybrid MoE 3B-act | 17.0 | 55.5 (Vulkan) | 65 | 0.85 | NVIDIA-OM | 🥇 general big-brain |
+| 6 | Nemotron-Nano-12B-v2 | hybrid 12B | 7.0 | 42.8 (SYCL) | 88 | 0.49 | NVIDIA-OM | fast hybrid |
+| 7 | Phi-4-reasoning-plus | 14B dense | 8.4 | 39.2 (SYCL) | 92 | 0.43 | **MIT** | reasoning (MIT) |
+| 8 | Qwen3.6-35B-A3B | MoE 3B-act | 20.0 | 37.3 (Vulkan) | 60 | 0.62 | Apache-2.0 | general MoE |
+| 9 | Gemma 4 12B | 12B dense | 6.9 | 36.4 (SYCL) | 85 | 0.43 | Gemma | dense daily-driver |
+| 10 | Granite-4.0-H-Small | hybrid MoE 9B-act | 17.2 | 34.3 (Vulkan) | 74 | 0.46 | Apache-2.0 | 9B-active rung |
+| 11 | QwQ-32B | 32B dense | 18.5 | 17.3 (SYCL) | 92 | 0.19 | Apache-2.0 | dense reasoner (wants B70) |
 
-**Picks:** general → **Nemotron-3-Nano-30B-A3B** · coding → **Qwen3-Coder-30B-A3B** (also the fastest
-big model the card holds) · MIT reasoning → **Phi-4-reasoning-plus** / **MiMo-7B-RL**.
+**Picks:** fastest/most-efficient → **LFM2.5-8B-A1B** · general → **Nemotron-3-Nano-30B-A3B** ·
+coding → **Qwen3-Coder-30B-A3B** · MIT reasoning → **Phi-4-reasoning-plus** / **MiMo-7B-RL**.
 
-### Backend rule (B60): **dense → SYCL, 30B-class MoE → Vulkan**
-Every dense model (incl. the 7B/12B/14B and the 12B hybrid) generates fastest on the **SYCL** build;
-every 30B-class **MoE** generates fastest on **Vulkan**. The discriminator is MoE-vs-dense, *not*
-Mamba — Qwen3-Coder is a pure MoE (no SSM) and still flips to Vulkan. *(This is **B60-specific**: on
-the **B70**, SYCL wins across the board — see the main table — so the MoE→Vulkan flip is the smaller
-G21's behaviour. SYCL-MoE flags were left at llama-bench defaults.)*
+### Backend rule (B60): **30B-class MoE → Vulkan, everything smaller → SYCL**
+The four 30B-class **MoEs** (Qwen3-Coder, Nemotron-30B, Granite, Qwen3.6) generate fastest on
+**Vulkan**; every dense model *and* the small MoE **LFM2.5-8B-A1B** generate fastest on **SYCL**. So
+the flip is a property of *large sparse* models, not MoE-ness itself (LFM2.5 is a 1B-active MoE and
+stays on SYCL; Qwen3-Coder is a pure MoE and flips), and not Mamba. *(B60-specific: on the **B70**,
+SYCL wins across the board — see the main table. SYCL-MoE flags left at llama-bench defaults.)*
 
 ### Past the VRAM wall (don't fit 2 cards)
 Giant MoEs benchmarked-by-spec only — need a big-RAM serving node, not more B70s:
@@ -49,6 +50,7 @@ The true **12B-active** rung (GLM-4.5-Air, Nemotron-Super-120B-A12B) needs the *
 | MiMo | 7B-RL fits; V2.5 (310B) past the wall | [`results/mimo-b60.md`](results/mimo-b60.md) |
 | Nemotron ×3 | 30B-A3B = B60 champ; 12B hybrid; 49B on 2 cards | [`results/nemotron-b60.md`](results/nemotron-b60.md) |
 | Permissive round | Phi-4 (MIT), Granite-4, Qwen3-Coder, QwQ-32B | [`results/permissive-models-b60.md`](results/permissive-models-b60.md) |
+| LFM2.5-8B-A1B | 1B-active MoE — fastest & most efficient on the B60 | [`results/lfm2.5-b60.md`](results/lfm2.5-b60.md) |
 | MoE ladder | speed vs active params (3B → 12B-active) | [`results/moe-ladder-results.md`](results/moe-ladder-results.md) |
 | Kimi-Linear | KDA linear attention — flat long-context speed | [`results/kimi-linear-results.md`](results/kimi-linear-results.md) |
 | Step-3.7 Flash | big MoE, RAM-bound — needs 96 GB | [`results/step37-flash-findings.md`](results/step37-flash-findings.md) |
